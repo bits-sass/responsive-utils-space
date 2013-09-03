@@ -1,0 +1,599 @@
+/* ==========================================================================
+   Responsive spacing-specific utilities
+   ========================================================================== */
+
+/**
+ * Spacing utilities with responsive capability
+ *
+ * See original utilities for more info.
+ */
+
+/* Variables
+   ========================================================================== */
+
+/**
+ * Bits.sass utilities namespace
+ */
+
+$bits-utils-ns: 'bits-' !default;
+
+/**
+ * Margin collapsing
+ *
+ * 1. Should we include margin collapse utils?
+ * 2. Typically size of component spacing.
+ */
+
+$bits-responsive-space-collapse-include: false !default; /* 1 */
+$bits-responsive-space-collapse-margin: 20px !default; /* 2 */
+
+/**
+ * Spacing (padding and margin)
+ *
+ * 1. Should we include spacing utils?
+ * 2. Specifies list of generated <direction>s.
+ * 3. Specifies list of generated <size>s.
+ */
+
+$bits-responsive-space-spacing-include: false !default; /* 1 */
+$bits-responsive-space-spacing-directions: (A V H T R B L) !default; /* 2 */
+$bits-responsive-space-spacing-sizes: /* 3 */ (
+  (n 0)
+  (s 5px)
+  (m 10px)
+  (l 20px)
+) !default;
+
+/**
+ * Gutters
+ *
+ * 1. Should we include gutter utils?
+ * 2. List of supported selectors.
+ *    You can use: `*`, `li` and any class name without a dot `.`
+ * 3. Specifies list of generated <type>s.
+ * 4. Specifies list of generated <size>s.
+ */
+
+$bits-responsive-space-gutter-include: true !default; /* 1 */
+$bits-responsive-space-gutter-supported-children: ( /* 2 */
+  u-gutter-item
+) !default;
+$bits-responsive-space-gutter-types:(A H V) !default; /* 3 */
+$bits-responsive-space-gutter-sizes: /* 4 */ (
+  (n 0)
+  (s 6px)
+  (m 10px)
+  (l 20px)
+) !default;
+
+/**
+ * Stretch
+ *
+ * 1. Should we include stretching utils?
+ * 2. Specifies list of generated <type>s.
+ * 3. Specifies list of generated <size>s.
+ */
+
+$bits-responsive-space-stretch-include: false !default; /* 1 */
+$bits-responsive-space-stretch-types: (H) !default; /* 2 */
+$bits-responsive-space-stretch-sizes: /* 3 */ (
+  (s 5px)
+  (m 10px)
+  (l 20px)
+) !default;
+
+/* Main mixin
+   ========================================================================== */
+
+/**
+ * Mixin encapsulating a version of space utils at a certain breakpoint
+ */
+
+/**
+ * 1. Eg. 'bits-v4-'.
+ */
+
+@mixin bits-space-responsive($breakpoint) {
+  $prefix: unquote("#{$bits-utils-ns}#{$breakpoint}-"); /* 1 */
+  
+  @if $bits-responsive-space-collapse-include {
+    .#{$prefix}u-collapseTop {
+      padding-top: 0 !important;
+
+      &:before {
+        content: "";
+        display: block;
+        height: 1px;
+        margin-bottom: $bits-responsive-space-collapse-margin - 1;
+      }
+    }
+    
+    .#{$prefix}u-collapseBottom {
+      padding-bottom: 0 !important;
+
+      &:after {
+        content: "";
+        display: block;
+        height: 1px;
+        margin-top: $bits-responsive-space-collapse-margin - 1;
+      }
+    }
+  }
+
+  $bits-responsive-space-sizes-unique: ();
+
+  $bits-responsive-space-spacing-sizes-sanitized: ();
+
+  @if $bits-responsive-space-spacing-include {
+    @each $size in $bits-responsive-space-spacing-sizes {
+      $sizeName: nth($size, 1);
+      $sizeVal: nth($size, 2);
+
+      $bits-responsive-space-spacing-sizes-sanitized: append(
+          $bits-responsive-space-spacing-sizes-sanitized,
+            ($sizeName $sizeVal margin)
+      );
+
+      $bits-responsive-space-spacing-sizes-sanitized: append(
+          $bits-responsive-space-spacing-sizes-sanitized,
+            ($sizeName $sizeVal padding)
+      );
+    }
+  }
+
+  $bits-responsive-space-gutter-sizes-sanitized: ();
+
+  @if $bits-responsive-space-gutter-include {
+    @each $size in $bits-responsive-space-gutter-sizes {
+      $sizeName: nth($size, 1);
+      $sizeVal: nth($size, 2);
+
+      $bits-responsive-space-gutter-sizes-sanitized: append(
+          $bits-responsive-space-gutter-sizes-sanitized,
+            ($sizeName (-$sizeVal / 2) margin)
+      );
+
+      $bits-responsive-space-gutter-sizes-sanitized: append(
+          $bits-responsive-space-gutter-sizes-sanitized,
+            ($sizeName ($sizeVal / 2) padding)
+      );
+    }
+  }
+
+  $bits-responsive-space-stretch-sizes-sanitized: ();
+
+  @if $bits-responsive-space-stretch-include {
+    @each $size in $bits-responsive-space-stretch-sizes {
+      $sizeName: nth($size, 1);
+      $sizeVal: nth($size, 2);
+
+      $bits-responsive-space-stretch-sizes-sanitized: append(
+          $bits-responsive-space-stretch-sizes-sanitized,
+            ($sizeName (-$sizeVal) margin)
+      );
+    }
+  }
+
+  @each $size in $bits-responsive-space-spacing-sizes-sanitized {
+    $sizeName: nth($size, 1);
+    $sizeVal: nth($size, 2);
+    $sizeType: nth($size, 3);
+    $isIn: false;
+
+    @if length($bits-responsive-space-sizes-unique) == 0 {
+      $isIn: false;
+    } @else {
+      @each $sizeInner in $bits-responsive-space-sizes-unique {
+        $sizeInnerName: nth($sizeInner, 1);
+        $sizeInnerVal: nth($sizeInner, 2);
+
+        @if ($sizeInnerVal == $sizeVal) {
+          $isIn: true;
+        }
+      }
+    }
+
+    @if not $isIn {
+      $bits-responsive-space-sizes-unique: append($bits-responsive-space-sizes-unique, $size);
+    }
+  }
+
+  @each $size in $bits-responsive-space-gutter-sizes-sanitized {
+    $sizeName: nth($size, 1);
+    $sizeVal: nth($size, 2);
+    $sizeType: nth($size, 3);
+    $isIn: false;
+
+    @if length($bits-responsive-space-sizes-unique) == 0 {
+      $isIn: false;
+    } @else {
+      @each $sizeInner in $bits-responsive-space-sizes-unique {
+        $sizeInnerName: nth($sizeInner, 1);
+        $sizeInnerVal: nth($sizeInner, 2);
+
+        @if ($sizeInnerVal == $sizeVal) {
+          $isIn: true;
+        }
+      }
+    }
+
+    @if not $isIn {
+      $bits-responsive-space-sizes-unique: append($bits-responsive-space-sizes-unique, $size);
+    }
+  }
+
+  @each $size in $bits-responsive-space-stretch-sizes-sanitized {
+    $sizeName: nth($size, 1);
+    $sizeVal: nth($size, 2);
+    $sizeType: nth($size, 3);
+    $isIn: false;
+
+    @if length($bits-responsive-space-sizes-unique) == 0 {
+      $isIn: false;
+    } @else {
+      @each $sizeInner in $bits-responsive-space-sizes-unique {
+        $sizeInnerName: nth($sizeInner, 1);
+        $sizeInnerVal: nth($sizeInner, 2);
+
+        @if ($sizeInnerVal == $sizeVal) {
+          $isIn: true;
+        }
+      }
+    }
+
+    @if not $isIn {
+      $bits-responsive-space-sizes-unique: append($bits-responsive-space-sizes-unique, $size);
+    }
+  }
+
+  $bits-responsive-space-sizes-unique-old: $bits-responsive-space-sizes-unique;
+  $bits-responsive-space-sizes-unique: ();
+  $bits-responsive-space-sizes-zero: null;
+
+  @each $size in $bits-responsive-space-sizes-unique-old {
+    $sizeVal: nth($size, 2);
+
+    @if $sizeVal == 0 {
+      $bits-responsive-space-sizes-zero: $size;
+    } @else {
+      $bits-responsive-space-sizes-unique: append($bits-responsive-space-sizes-unique, $size);
+    }
+  }
+
+  @if $bits-responsive-space-sizes-zero {
+    $bits-responsive-space-sizes-unique: append($bits-responsive-space-sizes-unique, $bits-responsive-space-sizes-zero);
+  }
+
+  $bits-responsive-space-packages: (
+    ($bits-responsive-space-spacing-sizes-sanitized, $bits-responsive-space-spacing-directions, 'spacing'),
+    ($bits-responsive-space-gutter-sizes-sanitized, $bits-responsive-space-gutter-types, 'gutter'),
+    ($bits-responsive-space-stretch-sizes-sanitized, $bits-responsive-space-stretch-types, 'stretch')
+  );
+
+  @each $size in $bits-responsive-space-sizes-unique {
+    $sizeVal: nth($size, 2);
+    $sizeType: nth($size, 3);
+
+    $marginSelectorsTop: ();
+    $marginSelectorsRight: ();
+    $marginSelectorsBottom: ();
+    $marginSelectorsLeft: ();
+
+    $paddingSelectorsTop: ();
+    $paddingSelectorsRight: ();
+    $paddingSelectorsBottom: ();
+    $paddingSelectorsLeft: ();
+
+    @each $package in $bits-responsive-space-packages {
+      $sizes: nth($package, 1);
+      $directions: nth($package, 2);
+      $type: nth($package, 3);
+
+      $sizeName: '';
+
+      $shouldAddMargin: false;
+      $shouldAddPadding: false;
+
+      @each $sizeInner in $sizes {
+        $sizeInnerName: nth($sizeInner, 1);
+        $sizeInnerVal: nth($sizeInner, 2);
+        $sizeInnerType: nth($sizeInner, 3);
+
+        @if ($sizeInnerVal == $sizeVal) {
+          @if $sizeInnerType == 'margin' {
+            $shouldAddMargin: true;
+          }
+
+          @if $sizeInnerType == 'padding' {
+            $shouldAddPadding: true;
+          }
+
+          $sizeName: $sizeInnerName;
+        }
+      }
+
+      @if index($directions, A) {
+        $marginSelector: '';
+        $paddingSelector: '';
+        $paddingSelectorArray: ();
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginA#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingA#{$sizeName}");
+        } @else if $type == 'gutter' {
+          $marginSelector: unquote(".#{$prefix}u-gutterA#{$sizeName}");
+
+          @each $child in $bits-responsive-space-gutter-supported-children {
+            $dot: '.';
+            $child-prefix: "#{$breakpoint}-";
+            $original-child-prefix: '';
+            $add-original-child: true;
+
+            @if $child == '*' or $child == 'li' {
+              $dot: '';
+              $child-prefix: '';
+              $add-original-child: false;
+            } @else if $child == 'u-gutter-item' {
+              $child-prefix: $prefix;
+              $original-child-prefix: "#{$bits-utils-ns}";
+            }
+
+            @if $add-original-child {
+              $paddingSelectorArray: $paddingSelectorArray, unquote(
+                  ".#{$prefix}u-gutterA#{$sizeName} > #{$dot}#{$original-child-prefix}#{$child}"
+              );
+            }
+
+            $paddingSelectorArray: $paddingSelectorArray, unquote(
+                ".#{$prefix}u-gutterA#{$sizeName} > #{$dot}#{$child-prefix}#{$child}"
+            );
+          }
+
+          $paddingSelector: $paddingSelectorArray;
+        } @else if $type == 'stretch' {
+          $marginSelector: unquote(".#{$prefix}u-stretchA#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsTop: $marginSelectorsTop, $marginSelector;
+          $marginSelectorsRight: $marginSelectorsRight, $marginSelector;
+          $marginSelectorsBottom: $marginSelectorsBottom, $marginSelector;
+          $marginSelectorsLeft: $marginSelectorsLeft, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsTop: $paddingSelectorsTop, $paddingSelector;
+          $paddingSelectorsRight: $paddingSelectorsRight, $paddingSelector;
+          $paddingSelectorsBottom: $paddingSelectorsBottom, $paddingSelector;
+          $paddingSelectorsLeft: $paddingSelectorsLeft, $paddingSelector;
+        }
+      }
+
+      @if index($directions, V) {
+        $marginSelector: '';
+        $paddingSelector: '';
+        $paddingSelectorArray: ();
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginV#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingV#{$sizeName}");
+        } @else if $type == 'gutter' {
+          $marginSelector: unquote(".#{$prefix}u-gutterV#{$sizeName}");
+
+          @each $child in $bits-responsive-space-gutter-supported-children {
+            $dot: '.';
+            $child-prefix: "#{$breakpoint}-";
+            $original-child-prefix: '';
+            $add-original-child: true;
+
+            @if $child == '*' or $child == 'li' {
+              $dot: '';
+              $child-prefix: '';
+              $add-original-child: false;
+            } @else if $child == 'u-gutter-item' {
+              $child-prefix: $prefix;
+              $original-child-prefix: "#{$bits-utils-ns}";
+            }
+
+            @if $add-original-child {
+              $paddingSelectorArray: $paddingSelectorArray, unquote(
+                  ".#{$prefix}u-gutterV#{$sizeName} > #{$dot}#{$original-child-prefix}#{$child}"
+              );
+            }
+
+            $paddingSelectorArray: $paddingSelectorArray, unquote(
+                ".#{$prefix}u-gutterV#{$sizeName} > #{$dot}#{$child-prefix}#{$child}"
+            );
+          }
+
+          $paddingSelector: $paddingSelectorArray;
+        } @else if $type == 'stretch' {
+          $marginSelector: unquote(".#{$prefix}u-stretchV#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsTop: $marginSelectorsTop, $marginSelector;
+          $marginSelectorsBottom: $marginSelectorsBottom, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsTop: $paddingSelectorsTop, $paddingSelector;
+          $paddingSelectorsBottom: $paddingSelectorsBottom, $paddingSelector;
+        }
+      }
+
+      @if index($directions, H) {
+        $marginSelector: '';
+        $paddingSelector: '';
+        $paddingSelectorArray: ();
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginH#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingH#{$sizeName}");
+        } @else if $type == 'gutter' {
+          $marginSelector: unquote(".#{$prefix}u-gutterH#{$sizeName}");
+
+          @each $child in $bits-responsive-space-gutter-supported-children {
+            $dot: '.';
+            $child-prefix: "#{$breakpoint}-";
+            $original-child-prefix: '';
+            $add-original-child: true;
+
+            @if $child == '*' or $child == 'li' {
+              $dot: '';
+              $child-prefix: '';
+              $add-original-child: false;
+            } @else if $child == 'u-gutter-item' {
+              $child-prefix: $prefix;
+              $original-child-prefix: "#{$bits-utils-ns}";
+            }
+
+            @if $add-original-child {
+              $paddingSelectorArray: $paddingSelectorArray, unquote(
+                  ".#{$prefix}u-gutterH#{$sizeName} > #{$dot}#{$original-child-prefix}#{$child}"
+              );
+            }
+
+            $paddingSelectorArray: $paddingSelectorArray, unquote(
+                ".#{$prefix}u-gutterH#{$sizeName} > #{$dot}#{$child-prefix}#{$child}"
+            );
+          }
+
+          $paddingSelector: $paddingSelectorArray;
+        } @else if $type == 'stretch' {
+          $marginSelector: unquote(".#{$prefix}u-stretchH#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsRight: $marginSelectorsRight, $marginSelector;
+          $marginSelectorsLeft: $marginSelectorsLeft, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsRight: $paddingSelectorsRight, $paddingSelector;
+          $paddingSelectorsLeft: $paddingSelectorsLeft, $paddingSelector;
+        }
+      }
+
+      @if index($directions, T) {
+        $marginSelector: '';
+        $paddingSelector: '';
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginT#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingT#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsTop: $marginSelectorsTop, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsTop: $paddingSelectorsTop, $paddingSelector;
+        }
+      }
+
+      @if index($directions, R) {
+        $marginSelector: '';
+        $paddingSelector: '';
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginR#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingR#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsRight: $marginSelectorsRight, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsRight: $paddingSelectorsRight, $paddingSelector;
+        }
+      }
+
+      @if index($directions, B) {
+        $marginSelector: '';
+        $paddingSelector: '';
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginB#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingB#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsBottom: $marginSelectorsBottom, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsBottom: $paddingSelectorsBottom, $paddingSelector;
+        }
+      }
+
+      @if index($directions, L) {
+        $marginSelector: '';
+        $paddingSelector: '';
+
+        @if $type == 'spacing' {
+          $marginSelector: unquote(".#{$prefix}u-marginL#{$sizeName}");
+          $paddingSelector: unquote(".#{$prefix}u-paddingL#{$sizeName}");
+        }
+
+        @if $shouldAddMargin {
+          $marginSelectorsLeft: $marginSelectorsLeft, $marginSelector;
+        }
+
+        @if $shouldAddPadding {
+          $paddingSelectorsLeft: $paddingSelectorsLeft, $paddingSelector;
+        }
+      }
+    }
+
+    @if length($marginSelectorsTop) > 0 {
+      #{$marginSelectorsTop} {
+        margin-top: $sizeVal !important;
+      }
+    }
+
+    @if length($marginSelectorsRight) > 0 {
+      #{$marginSelectorsRight} {
+        margin-right: $sizeVal !important;
+      }
+    }
+
+    @if length($marginSelectorsBottom) > 0 {
+      #{$marginSelectorsBottom} {
+        margin-bottom: $sizeVal !important;
+      }
+    }
+
+    @if length($marginSelectorsLeft) > 0 {
+      #{$marginSelectorsLeft} {
+        margin-left: $sizeVal !important;
+      }
+    }
+
+    @if length($paddingSelectorsTop) > 0 {
+      #{$paddingSelectorsTop} {
+        padding-top: $sizeVal !important;
+      }
+    }
+
+    @if length($paddingSelectorsRight) > 0 {
+      #{$paddingSelectorsRight} {
+        padding-right: $sizeVal !important;
+      }
+    }
+
+    @if length($paddingSelectorsBottom) > 0 {
+      #{$paddingSelectorsBottom} {
+        padding-bottom: $sizeVal !important;
+      }
+    }
+
+    @if length($paddingSelectorsLeft) > 0 {
+      #{$paddingSelectorsLeft} {
+        padding-left: $sizeVal !important;
+      }
+    }
+  }
+}
